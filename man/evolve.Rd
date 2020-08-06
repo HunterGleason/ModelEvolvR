@@ -2,7 +2,7 @@
 % Please edit documentation in R/GA_FEAT_SELECT.R
 \name{evolve}
 \alias{evolve}
-\title{Primary function, performs feature selection through evolution abstraction.}
+\title{Primary function, performs feature selection through abstraction of evolution process.}
 \usage{
 evolve(
   Y_NAME,
@@ -32,22 +32,24 @@ evolve(
 
 \item{PRCTL}{The percentile at which the fitness threshold is defined for selection.}
 
-\item{MUTE_RATE}{A initial rate of mutation,0-1.}
+\item{MUTE_RATE}{A maximum rate of mutation, i.e., when absolute \% slope change in mean fitness equals zero.}
 
 \item{GENZ}{Total number of generations to be iterated.}
 
 \item{MAXIMIZE}{Boolean, is fitness being maximized, or minimized 'e.g., AIC'}
 }
 \value{
-A list, with the evolved population list, fitness vector, and mean fitness vector, in that order.
+A list, with the evolved population list, final fitness vector, and mean fitness vector, in that order.
 }
 \description{
-This function performs feature selection through evolution abstraction by
-minimizing or maximizing a user defined fitness function. This fitness function
+This function performs feature selection through an abstraction of evolution by
+minimizing or maximizing a user defined fitness function. The user defined fitness function
 must take a formula and corresponding data frame as inputs, and return
 one numeric value representing fitness. The number of generations is up
 to the user to define, and optimize, however, mean fitness is returned
 as a vector for each generation to help decide an appropriate number
 of iterations. This function adapts the mutation rate based on the
-rate of improvment from one generation to the next.
+rate of improvement from one generation to the next in population mean fitness,
+however a maximum rate of mutation must be provided. This is the rate of mutation
+when there is no instantaneous change in population mean fitness.
 }

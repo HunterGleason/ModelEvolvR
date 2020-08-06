@@ -2,7 +2,7 @@
 % Please edit documentation in R/GA_FEAT_SELECT.R
 \name{calc_fit}
 \alias{calc_fit}
-\title{Interface to user defined fitness function}
+\title{Interface to user defined fitness function.}
 \usage{
 calc_fit(FORMULA, DF, FIT_FUNC)
 }
@@ -11,14 +11,16 @@ calc_fit(FORMULA, DF, FIT_FUNC)
 
 \item{DF}{A data frame containing both the response and predictor variables.}
 
-\item{FIT_FUNC}{A function that accepts two arguments, a formula and data frame, and return a fitness as a single float value.}
+\item{FIT_FUNC}{A function that accepts two arguments, a formula and data frame,
+and returns a fitness as a single numeric value.}
 }
 \value{
-Output fitness of user defined fitness function.
+Computed fitness of user defined fitness function.
 }
 \description{
 This function serves as an interface to user defined fitness function.
 Provided a formula, or model, and data frame, the function passes
-the data to the users function, which is assumed to only have two
-parameters, a formula and data frame, and return a single number, or fitness.
+calls the users fitness function, which is assumed to only have two
+parameters, a formula and corresponding data frame,
+and return a single numeric value 'fitness'.
 }

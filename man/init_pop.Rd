@@ -2,14 +2,14 @@
 % Please edit documentation in R/GA_FEAT_SELECT.R
 \name{init_pop}
 \alias{init_pop}
-\title{Initialize a population}
+\title{Initializes a population of random models.}
 \usage{
 init_pop(Y_NAME, X_NAMES, MAX_TERMS, N)
 }
 \arguments{
-\item{Y_NAME}{String name of response variable in data frame.}
+\item{Y_NAME}{String, name of response variable in data frame.}
 
-\item{X_NAMES}{Character vector of possible predictors present in data frame.}
+\item{X_NAMES}{Character vector of possible predictor names present in data frame.}
 
 \item{MAX_TERMS}{Maximum number of terms to include in a model, does not account for interactions.}
 
@@ -19,7 +19,6 @@ init_pop(Y_NAME, X_NAMES, MAX_TERMS, N)
 A list 'population' of random models as formulas.
 }
 \description{
-This function initializes a population of N random models
-with up to MAX_TERMS terms provided predictors and a
-response variable as character vectors.
+This function initializes a population of random models
+provided predictors and a response variable as character vectors.
 }

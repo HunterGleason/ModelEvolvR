@@ -2,12 +2,12 @@
 % Please edit documentation in R/GA_FEAT_SELECT.R
 \name{select_parents}
 \alias{select_parents}
-\title{Function for selecting two parents from a population}
+\title{Function for selecting two parents from a population of models.}
 \usage{
 select_parents(POP, FIT_VECT, PRCTL, MAXIMIZE)
 }
 \arguments{
-\item{POP}{A population list}
+\item{POP}{The population list.}
 
 \item{FIT_VECT}{A vector of fitness scores corresponding to the population list.}
 
@@ -16,10 +16,11 @@ select_parents(POP, FIT_VECT, PRCTL, MAXIMIZE)
 \item{MAXIMIZE}{Boolean, is fitness being maximized, or minimized 'e.g., AIC'}
 }
 \value{
-Output fitness of user defined fitness function.
+Two selected parent models in a list.
 }
 \description{
 This function randomly selects to models 'parents' from a population
 based on a fitness threshold, i.e., from the pool of models
-with a fitness score greater than 'or less than' some percentile.
+with a fitness score greater than 'or less than' a
+specified percentile.
 }

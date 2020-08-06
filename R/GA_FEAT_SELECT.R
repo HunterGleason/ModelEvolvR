@@ -1,14 +1,13 @@
 
 
 
-#'Initialize a population
+#'Initializes a population of random models.
 #'
-#' This function initializes a population of N random models
-#' with up to MAX_TERMS terms provided predictors and a
-#' response variable as character vectors.
+#' This function initializes a population of random models
+#' provided predictors and a response variable as character vectors.
 #'
-#' @param Y_NAME String name of response variable in data frame.
-#' @param X_NAMES Character vector of possible predictors present in data frame.
+#' @param Y_NAME String, name of response variable in data frame.
+#' @param X_NAMES Character vector of possible predictor names present in data frame.
 #' @param MAX_TERMS Maximum number of terms to include in a model, does not account for interactions.
 #' @param N Total number of random individual models to initialize,i.e., population size.
 #' @return A list 'population' of random models as formulas.
@@ -31,34 +30,37 @@ init_pop<-function(Y_NAME,X_NAMES,MAX_TERMS,N)
 }
 
 
-#'Interface to user defined fitness function
+#'Interface to user defined fitness function.
 #'
 #' This function serves as an interface to user defined fitness function.
 #' Provided a formula, or model, and data frame, the function passes
-#' the data to the users function, which is assumed to only have two
-#' parameters, a formula and data frame, and return a single number, or fitness.
+#' calls the users fitness function, which is assumed to only have two
+#' parameters, a formula and corresponding data frame,
+#' and return a single numeric value 'fitness'.
 #'
 #' @param FORMULA A formula assumed to correspond to fields present in the data frame.
 #' @param DF A data frame containing both the response and predictor variables.
-#' @param FIT_FUNC A function that accepts two arguments, a formula and data frame, and return a fitness as a single float value.
-#' @return Output fitness of user defined fitness function.
+#' @param FIT_FUNC A function that accepts two arguments, a formula and data frame,
+#' and returns a fitness as a single numeric value.
+#' @return Computed fitness of user defined fitness function.
 #' @export
 calc_fit<-function(FORMULA, DF, FIT_FUNC)
 {
   return(FIT_FUNC(FORMULA,DF))
 }
 
-#'Function for selecting two parents from a population
+#'Function for selecting two parents from a population of models.
 #'
 #' This function randomly selects to models 'parents' from a population
 #' based on a fitness threshold, i.e., from the pool of models
-#' with a fitness score greater than 'or less than' some percentile.
+#' with a fitness score greater than 'or less than' a
+#' specified percentile.
 #'
-#' @param POP A population list
+#' @param POP The population list.
 #' @param FIT_VECT A vector of fitness scores corresponding to the population list.
 #' @param PRCTL The percentile at which the fitness threshold is defined for selection.
 #' @param MAXIMIZE Boolean, is fitness being maximized, or minimized 'e.g., AIC'
-#' @return Output fitness of user defined fitness function.
+#' @return Two selected parent models in a list.
 #' @export
 select_parents<-function(POP,FIT_VECT,PRCTL,MAXIMIZE)
 {
@@ -91,7 +93,7 @@ select_parents<-function(POP,FIT_VECT,PRCTL,MAXIMIZE)
 
 }
 
-#'Function for crossing two members, i.e., models.
+#'Function for crossing two parent models.
 #'
 #' This function randomly combines two models, with
 #' somewhere between 1 and MAX_TERMS terms. Models are
@@ -102,7 +104,7 @@ select_parents<-function(POP,FIT_VECT,PRCTL,MAXIMIZE)
 #' @param MAX_TERMS Maximum number of terms to include in a model, does not account for interactions.
 #' @param Y_NAME String name of response variable in data frame.
 #' @param X_NAMES Character vector of possible predictors present in data frame.
-#' @return A model with 'genetic material' from parents, as a formula.
+#' @return A model with genetic material 'input features' from parents, as a formula.
 #' @export
 cross_over<-function(PARENTS,MUTE_RATE,MAX_TERMS,Y_NAME,X_NAMES)
 {
@@ -149,16 +151,18 @@ cross_over<-function(PARENTS,MUTE_RATE,MAX_TERMS,Y_NAME,X_NAMES)
 }
 
 
-#'Primary function, performs feature selection through evolution abstraction.
+#'Primary function, performs feature selection through abstraction of evolution process.
 #'
-#' This function performs feature selection through evolution abstraction by
-#' minimizing or maximizing a user defined fitness function. This fitness function
+#' This function performs feature selection through an abstraction of evolution by
+#' minimizing or maximizing a user defined fitness function. The user defined fitness function
 #' must take a formula and corresponding data frame as inputs, and return
 #' one numeric value representing fitness. The number of generations is up
 #' to the user to define, and optimize, however, mean fitness is returned
 #' as a vector for each generation to help decide an appropriate number
 #' of iterations. This function adapts the mutation rate based on the
-#' rate of improvement from one generation to the next.
+#' rate of improvement from one generation to the next in population mean fitness,
+#' however a maximum rate of mutation must be provided. This is the rate of mutation
+#' when there is no instantaneous change in population mean fitness.
 #'
 #' @param Y_NAME String name of response variable in data frame.
 #' @param X_NAMES Character vector of possible predictors present in data frame.
@@ -167,12 +171,12 @@ cross_over<-function(PARENTS,MUTE_RATE,MAX_TERMS,Y_NAME,X_NAMES)
 #' @param MAX_TERMS Maximum number of terms to include in a model, does not account for interactions.
 #' @param N Total number of random individual models to initialize,i.e., population size.
 #' @param PRCTL The percentile at which the fitness threshold is defined for selection.
-#' @param MUTE_RATE A initial rate of mutation,0-1.
+#' @param MX_MUTE_RATE A maximum rate of mutation '0-1', i.e., when absolute % slope change in mean fitness equals zero.
 #' @param GENZ Total number of generations to be iterated.
 #' @param MAXIMIZE Boolean, is fitness being maximized, or minimized 'e.g., AIC'
-#' @return A list, with the evolved population list, fitness vector, and mean fitness vector, in that order.
+#' @return A list, with the evolved population list, final fitness vector, and mean fitness vector, in that order.
 #' @export
-evolve<-function(Y_NAME,X_NAMES,DF,FIT_FUNC,MAX_TERMS,N,PRCTL,MUTE_RATE,GENZ,MAXIMIZE)
+evolve<-function(Y_NAME,X_NAMES,DF,FIT_FUNC,MAX_TERMS,N,PRCTL,MX_MUTE_RATE,GENZ,MAXIMIZE)
 {
 
   set.seed(42)
@@ -233,7 +237,9 @@ evolve<-function(Y_NAME,X_NAMES,DF,FIT_FUNC,MAX_TERMS,N,PRCTL,MUTE_RATE,GENZ,MAX
 
       p_slope<-abs(slope)*100
 
-      MUTE_RATE = (-0.005*p_slope) + 0.5
+      coef_a<-MX_MUTE_RATE/100
+
+      MUTE_RATE = (-coef_a*p_slope) + MX_MUTE_RATE
 
       if(MUTE_RATE<0)
       {

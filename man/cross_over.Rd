@@ -2,7 +2,7 @@
 % Please edit documentation in R/GA_FEAT_SELECT.R
 \name{cross_over}
 \alias{cross_over}
-\title{Function for crossing two members, i.e., models.}
+\title{Function for crossing two parent models.}
 \usage{
 cross_over(PARENTS, MUTE_RATE, MAX_TERMS, Y_NAME, X_NAMES)
 }
@@ -18,7 +18,7 @@ cross_over(PARENTS, MUTE_RATE, MAX_TERMS, Y_NAME, X_NAMES)
 \item{X_NAMES}{Character vector of possible predictors present in data frame.}
 }
 \value{
-A model with 'genetic material' from parents, as a formula.
+A model with genetic material 'input features' from parents, as a formula.
 }
 \description{
 This function randomly combines two models, with
