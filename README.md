@@ -54,11 +54,11 @@ max_terms<-ncol(DF)-1
 
 pop_size<-100
 
-percentile<-0.75
+percentile<-0.25
 
 max_mute_rate<-.3
 
-generations<-6000
+generations<-2000
 
 maximize<-FALSE
 
@@ -66,7 +66,7 @@ evolved<-ModelEvolvR::evolve(y_name,x_names,DF,fit_fun,max_terms,pop_size,percen
 ```
 **Explore Results**
 ```
-plot(evolved[[3]], type='l', xlab="Generation",ylab = "Pop. Mean Fitness")
+plot(evolved[[3]], type='l', xlab="Generation",ylab = "Pop. Mean Fitness (BIC)")
 
 best_model<-evolved[[1]][[which.min(evolved[[2]])]]
 
