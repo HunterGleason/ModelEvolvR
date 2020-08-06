@@ -190,6 +190,8 @@ evolve<-function(Y_NAME,X_NAMES,DF,FIT_FUNC,MAX_TERMS,N,PRCTL,MX_MUTE_RATE,GENZ,
 
   mean_fit<-c(mean(fit_vec))
 
+  MUTE_RATE<-0.0
+
   for(g in c(1:GENZ))
   {
 
