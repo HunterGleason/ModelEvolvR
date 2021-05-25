@@ -12,7 +12,7 @@ evolve(
   MAX_TERMS,
   N,
   PRCTL,
-  MUTE_RATE,
+  MX_MUTE_RATE,
   GENZ,
   MAXIMIZE
 )
@@ -32,7 +32,7 @@ evolve(
 
 \item{PRCTL}{The percentile at which the fitness threshold is defined for selection.}
 
-\item{MUTE_RATE}{A maximum rate of mutation, i.e., when absolute \% slope change in mean fitness equals zero.}
+\item{MX_MUTE_RATE}{A maximum rate of mutation '0-1', i.e., when absolute \% slope change in mean fitness equals zero.}
 
 \item{GENZ}{Total number of generations to be iterated.}
 
