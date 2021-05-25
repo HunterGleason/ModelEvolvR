@@ -1,0 +1,47 @@
+---
+title: "ModelEvolvR Introduction"
+output: rmarkdown::html_vignette
+author: Hunter Gleason
+vignette: >
+  %\VignetteIndexEntry{introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+This vignette relies on the Fang Zhou, Claire Q and Ross. D. King Predicting the Geographical Origin of Music, ICDM, 2014 from the UCI Machine Learning Repository [UCI_GOM](https://archive.ics.uci.edu/ml/datasets/Geographical+Original+of+Music) to show the use of this package for feature selection. This dataset includes 1059 tracks covering 33 different regions of the world. The 116 input variables represent standardized timbal and chromatic attributes extracted from each track. The last two columns represent the latitude and longitude of origin, respectively. This vignette fits a simple linear regression model, and uses the ModelEvolvR package to select a subset of 8 variables to predict the latitude of origin.   
+
+
+```{r setup}
+library(ModelEvolvR)
+```
+
+
+## Load the Global Origin of Music dataset as data.frame
+```{r message=FALSE, warning=FALSE}
+
+GOM <- ModelEvolvR::default_plus_chromatic_features_1059_tracks
+
+colnames(GOM)[117] <- 'lat'
+colnames(GOM)[118] <- 'lon'
+
+head(GOM)
+```
+
+
+## There are a number of parameters that must be specified to run the ModelEvolvR::evolve function. The first two are character vectors specifing the column names for the responce (y_name) and predictor (x_names) varibles, for this example we predict latitude or origin and use all 116 track varibles as possiple predictors. 
+```{r message=FALSE, warning=FALSE}
+y_name <- colnames(GOM)['lat']
+x_names <- colnames(GOM)[,c(1:116)]
+
+```
+
+
+
