@@ -7,41 +7,217 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-
+  
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
+  knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
-)
+  )
 ```
-
-
-This vignette relies on the Fang Zhou, Claire Q and Ross. D. King Predicting the Geographical Origin of Music, ICDM, 2014 from the UCI Machine Learning Repository [UCI_GOM](https://archive.ics.uci.edu/ml/datasets/Geographical+Original+of+Music) to show the use of this package for feature selection. This dataset includes 1059 tracks covering 33 different regions of the world. The 116 input variables represent standardized timbal and chromatic attributes extracted from each track. The last two columns represent the latitude and longitude of origin, respectively. This vignette fits a simple linear regression model, and uses the ModelEvolvR package to select a subset of 8 variables to predict the latitude of origin.   
-
-
+  
+  
+  This vignette relies on the Fang Zhou, Claire Q and Ross. D. King Predicting the Geographical Origin of Music, ICDM, 2014 from the UCI Machine Learning Repository [UCI_GOM](https://archive.ics.uci.edu/ml/datasets/Geographical+Original+of+Music) to show the use of this package for feature selection. This dataset includes 1059 tracks covering 33 different regions of the world. The 116 input variables represent standardized timbal and chromatic attributes extracted from each track. The last two columns represent the latitude and longitude of origin, respectively. As an example application, this vignette fits a simple KNN model to the Origin of Music dataset and uses the ModelEvolvR package to select a subset of 10 variables to predict the latitude of the musics geographic origin.   
+  
+  
 ```{r setup}
-library(ModelEvolvR)
+  library(ModelEvolvR)
+  library(caret)
 ```
-
-
+  
+  
 ## Load the Global Origin of Music dataset as data.frame
 ```{r message=FALSE, warning=FALSE}
-
-GOM <- ModelEvolvR::default_plus_chromatic_features_1059_tracks
-
-colnames(GOM)[117] <- 'lat'
-colnames(GOM)[118] <- 'lon'
-
-head(GOM)
+  
+  #Get data from package
+  GOM <- ModelEvolvR::default_plus_chromatic_features_1059_tracks
+  
+  #Rename predictor fields for clarity 
+  colnames(GOM)[117] <- 'lat'
+  colnames(GOM)[118] <- 'lon'
+  
+  #View
+  head(GOM)
+  
+  set.seed(3)
 ```
-
-
-## There are a number of parameters that must be specified to run the ModelEvolvR::evolve function. The first two are character vectors specifing the column names for the responce (y_name) and predictor (x_names) varibles, for this example we predict latitude or origin and use all 116 track varibles as possiple predictors. 
+  
+  
+## Define response and predictor variable names within data.frame
+  
+  There are a number of parameters that must be specified to run the ModelEvolvR::evolve function. The first two are character vectors specifying the column names for the response (y_name) and predictor (x_names) variables, for this example we predict latitude or origin and use all 116 track variables as possible predictors. 
 ```{r message=FALSE, warning=FALSE}
-y_name <- colnames(GOM)['lat']
-x_names <- colnames(GOM)[,c(1:116)]
+  
+#Here we are predicting the latitude of origin 
+y_name <- 'lat'
+
+#Variables up to 116 are predictor variables
+x_names <- colnames(GOM)[c(1:116)]
+
+```
+
+## Define a fitness function
+
+Any genetic algorithm needs some way of indicating the 'fitness' of a particular member of the population. This algorithm requires the user define their own. This function must have two arguments, including a R formula (**FORMULA**), and a data.frame (**DF**), and must return one number indicating the fitness of that model. This number can be one where fitness is improved with larger numbers (e.g., R-squared), or lower numbers (e.g., BIC), and is specified by the **maximize** parameter, which will seek to maximize fitness values when TRUE, or minimize fitness when FALSE. In this example we use a KNN model with k=15 and use the mean-absolute-error (MAE) to assess model fitness. We train the model on a training data set defined below, and test fitness on an optimization set also defined below. 
+
+```{r message=FALSE, warning=FALSE}
+
+#Fitness function for KNN model using mean-absolute-error (MAE) as fitness metric
+
+fit_fun <- function(FORMULA,DF)
+{
+  #Get a training data.frame based on DF and FORMULA
+  train_x <- within(model.frame(as.formula(FORMULA),DF),rm(lat))
+  
+  #Fit the KNN on the training data with k=15
+  fit <- knnreg(train_x,DF$lat, k = 15)
+  
+  #Get the optimization data.frame based on DF and FORMULA
+  test_x <- within(model.frame(as.formula(FORMULA),opt_df),rm(lat))
+  
+  #Determine the MAE of the KNN model on the optimization dataframe 
+  mae = mean(abs(opt_df$lat-predict(fit,test_x)))
+  
+  return(mae)
+}
+
+#Because lower BIC scores indicate a more parsimonious model, we set maximize to FALSE
+maximize = FALSE
 
 ```
 
 
+## Initialize a population and define maximum terms
+
+The genetic algorithm needs an initial random population defined before model evolution can take place. The user must specify the size of this initial population (**pop_size**), and the maximum number of terms (**max_terms**) allowed in the formula of any one model. Careful choice of **pop_size** will increase the efficiency of the search, a larger initial population increases the *genetic diversity* available in the beginning of the search but also increase the computation time. As a rule if thumb for most models setting **max_terms** to any number larger than ~10 seems to increase to likelihood of model over fitting. Here we define an initial population of size 5000 and specify a maximum of 6 terms for any model, note models with less then six terms are also considered. 
+
+```{r message=FALSE, warning=FALSE}
+
+# Set the initial population size, here we try 500 initial models. 
+pop_size <- 5000
+
+# Set the maximum number of terms to be included in any one model, here we choose 6 terms
+max_terms <- 6
+
+```
+
+
+## Set number of generations and selection threshold
+
+A genetic algorithm uses stochastic optimization to search for fitter models with each iteration, or generation. The user must specify the number of iterations to perform. This usually takes some trial to get reasonable results. One method is to observe the population mean fitness with each generation, when this curve appears to become asymptotic is a good indicator enough generations have past. However it is difficult to confirm with certainty that global convergence has been achieved. With fitness calculated for the entire population, selection fro cross-over in this algorithm is simple where any models above (or below) a specified fitness percentile (**percentile**) will be model candidates and two will be randomly selected from this pool. For instance if **maximize** was TRUE, a **percentile** of 0.75 would include all models with a fitness scores above the 75 percentile as candidates for cross-over. Here we set the generations to 45000 and use a cross-over percentile of 15%, i.e., all models with a MAE below the 15th percentile will be considered as candidates for cross-over.
+
+```{r message=FALSE, warning=FALSE}
+
+#Set number of generations to 2000
+generations <- 45000
+
+#Set percentile threshold to 0.25 (i.e., models with a BIC below the 15th percentile will be candidates for cross-over)
+percentile <- 0.15
+
+```
+
+
+## Define mutation rate
+
+For model evolution to continue after the genetic information in the initial population is exhausted, some form of mutation must be present. This algorithm produces offspring models from two parent models by randomly selecting the number of terms in the offspring model, and then selecting terms randomly from both parent models until the number of terms is reached. Once a offspring model is defined, each term is subjected to mutation at a maximum mutation rate of **max_mute_rate**. This algorithm will scale the mutation rate linearly based on the slope of the mean fitness curve, up to **max_mute_rate** (as percent) when no improvement in mean population fitness occurs. This parameter usually takes some tuning to optimize performance, 30% (0.3) is good starting value. 
+
+```{r message=FALSE, warning=FALSE}
+
+#Set the maximum mutation rate to 30%,
+max_mute_rate <- 0.3
+
+```
+
+
+## Running ModelEvolvR
+
+At this point all the inputs require to perform feature selection with ModelEvolvR are defined, and feature selection can be run with the *ModelEvolvR::evolve* function, as shown below. Here we reserve a portion (20%) of the data for testing the final model. 
+
+```{r message=FALSE, warning=FALSE}
+
+#Create a training index using 60% data 
+train_idx <- sample(c(1:nrow(GOM)),nrow(GOM)*0.60)
+
+#Create a optimization set index using 20% data 
+opt_idx <- sample(c(1:nrow(GOM))[c(1:nrow(GOM)) %in% train_idx == FALSE],nrow(GOM)*.2)
+
+train_df <- GOM[train_idx,]
+
+opt_df <- GOM[opt_idx,]
+
+#Create a test set using 20%
+test_df <- GOM[-c(train_idx,opt_idx),]
+
+#Perform feature selection with the evolve function, this can take some time depending on the generation and initial population size. 
+evolved <- ModelEvolvR::evolve(y_name,x_names,train_df,fit_fun,max_terms,pop_size,percentile,max_mute_rate,generations,maximize)
+
+```
+
+## Explore the Results 
+
+The *ModelEvolvR::evolve* function returns a list of three objects, the first object is a list of the final population (i.e., a list of formulas), the second is the corresponding fitness of each model in the final population (a vector), and the third is a vector of the mean population fitness with consecutive generations. Below is an example of these results can be applied and plotted. While the model performance is not outstanding, the algorithm does seem to have selected an important subset of inputs with regard to predicting musical origin.
+
+```{r message=FALSE, warning=FALSE, fig.width=6, fig.height=6,}
+
+#Plot mean population with consecutive generations 
+plot(evolved[[3]], type='l', xlab="Generation",ylab = "Pop. Mean Fitness (BIC)")
+
+#Get the 'best_modl' based on fitness score, this will only return the first if there are ties
+best_model<-evolved[[1]][[which.min(evolved[[2]])]]
+best_model
+  
+#Get a training data.frame based on GA output FORMULA
+train_x <- within(model.frame(as.formula(best_model),train_df),rm(lat))
+  
+#Fit the KNN on the training data 
+fit <- knnreg(train_x,train_df$lat, k = 15)
+  
+#Get the test data.frame based on GA output FORMULA
+test_x <- within(model.frame(as.formula(best_model),test_df),rm(lat))
+  
+mae = mean(abs(train_df$lat-predict(fit,train_x)))
+mae
+
+plot(train_df$lat,predict(fit,train_x),cex=0.2)
+abline(a=0,b=1)
+
+#Determine the MAE of the KNN model on the test dataframe 
+mae = mean(abs(test_df$lat-predict(fit,test_x)))
+mae
+
+plot(test_df$lat,predict(fit,test_x),cex=0.2)
+abline(a=0,b=1)
+
+plot(GOM$V36,GOM$lat)
+plot(GOM$V24,GOM$lat)
+plot(GOM$V32,GOM$lat)
+plot(GOM$V62,GOM$lat)
+plot(GOM$V100,GOM$lat)
+plot(GOM$V93,GOM$lat)
+```
+
+
+## Adding interactions 
+
+Interaction terms can be added before running GA by adding their tags to **x_names** in formula syntax, for example: 
+
+```{r message=FALSE, warning=FALSE}
+
+iters<-c()
+cnt<-1
+for(i in c(1:length(x_names)))
+{
+  for(j in c(i:length(x_names)))
+  {
+    iters[cnt]<-paste(x_names[i],":",x_names[j],sep="")
+    cnt<-cnt+1
+  }
+}
+
+iters<-c(x_names,iters)
+
+tail(iters)
+
+x_names <- iters
+
+```
 
