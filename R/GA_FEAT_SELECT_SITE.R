@@ -47,14 +47,14 @@ calc_fit_site<-function(sample,pop_df)
 #' @param prctl Fitness percentile for which any subset of sites with a fitness score below this will be canidates for cross-over.
 #' @return Cumulative kolmogorov smirnov D statistic for each covaraite in the sample of sites with respect to the population of sites (i.e, all possible locations)
 #' @export
-select_site<-function(fit_v,prctl)
+select_site<-function(fit_v,prctl,population)
 {
   thresh<-quantile(fit_v,prctl)
 
   canidates<-c(1:length(fit_v))[fit_v<=thresh]
 
-  P1<-pop[[sample(canidates,1)]]
-  P2<-pop[[sample(canidates,1)]]
+  P1<-population[[sample(canidates,1)]]
+  P2<-population[[sample(canidates,1)]]
 
   parents<-list(P1,P2)
 
@@ -122,7 +122,7 @@ evolve_site<-function(N,num_sites,canidate_df,population_df,generations,prctl_th
   for(g in c(1:generations))
   {
 
-    parents<-select_site(fit_vec,prctl_thresh)
+    parents<-select_site(fit_vec,prctl_thresh,pop)
 
     offspring<-crossover_site(parents,mute_rate,canidate_df)
 
