@@ -159,7 +159,7 @@ The *ModelEvolvR::evolve* function returns a list of three objects, the first ob
 ```{r message=FALSE, warning=FALSE, fig.width=6, fig.height=6,}
 
 #Plot mean population with consecutive generations 
-plot(evolved[[3]], type='l', xlab="Generation",ylab = "Pop. Mean Fitness (BIC)")
+plot(evolved[[3]], type='l', xlab="Generation",ylab = "Pop. Mean Fitness (MAE)")
 
 #Get the 'best_modl' based on fitness score, this will only return the first if there are ties
 best_model<-evolved[[1]][[which.min(evolved[[2]])]]
