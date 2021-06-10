@@ -4,17 +4,17 @@
 #' provided a data frame of possible site locations with
 #' covariates as columns.
 #'
-#' @param samp_df Data frame containing all covarites of interest as columns, and all potential sites as rows.
+#' @param canidate_df Data frame containing all covarites of interest as columns, and all canidate sites as rows.
 #' @param num_sites Maximum number of sites to include in a subset, i.e., total number of sample sites.
 #' @param N Total number of random subsets of sites to initialize,i.e., population size.
 #' @return A list 'population' of random subsets of sites (rows) from the samp_df data.frame.
 #' @export
-init_pop_site<-function(N,num_sites,samp_df)
+init_pop_site<-function(N,num_sites,canidate_df)
 {
   pop<-list()
   for(e in c(1:N))
   {
-    pop[[e]]<-sample(c(1:nrow(samp_df)),num_sites)
+    pop[[e]]<-sample(c(1:nrow(canidate_df)),num_sites)
   }
 
   return(pop)
@@ -68,10 +68,10 @@ select_site<-function(fit_v,prctl,population)
 #'
 #' @param parents List of two parent subsets of sites.
 #' @param mute_rate Rate of mutation 0-1.
-#' @param samp_df Data frame containing all covarites of interest as columns, and all potential sites as rows.
+#' @param canidate_df Data frame containing all covarites of interest as columns, and all canidate sites as rows.
 #' @return A new subset of sites that is the random combination of the two provided parent subsets, with mutation.
 #' @export
-crossover_site<-function(parents,mute_rate,samp_df)
+crossover_site<-function(parents,mute_rate,canidate_df)
 {
   comb<-c(parents$P1,parents$P2)
 
@@ -84,7 +84,7 @@ crossover_site<-function(parents,mute_rate,samp_df)
 
     if(rand<mute_rate)
     {
-      offspr[i]<-sample(c(1:nrow(samp_df)),1)
+      offspr[i]<-sample(c(1:nrow(canidate_df)),1)
     }
 
   }
@@ -105,8 +105,9 @@ crossover_site<-function(parents,mute_rate,samp_df)
 #' @param mute_rate Rate of mutation during cross-over (0-1).
 #' @return A new subset of sites that is the random combination of the two provided parent subsets, with mutation.
 #' @export
-evolve_site<-function(N,num_sites,canidate_df,population_df,generations,prctl_thresh,mute_rate)
+evolve_site<-function(N,num_sites,canidate_df,population_df,generations,prctl_thresh,mute_rate,seed=42)
 {
+  set.seed(seed)
 
   pop<-init_pop_site(N,num_sites,canidate_df)
 
@@ -126,7 +127,7 @@ evolve_site<-function(N,num_sites,canidate_df,population_df,generations,prctl_th
 
     offspring<-crossover_site(parents,mute_rate,canidate_df)
 
-    offspring_fit<-calc_fit_site(obs_df[offspring,],pop_df)
+    offspring_fit<-calc_fit_site(canidate_df[offspring,],pop_df)
 
     min_fit<-which.min(fit_vec)
     max_fit<-which.max(fit_vec)
